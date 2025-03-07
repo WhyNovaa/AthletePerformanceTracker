@@ -6,6 +6,7 @@ use crate::traits::traits::SportPerformance;
 
 mod models;
 mod traits;
+mod service;
 
 #[tokio::main]
 async fn main() {
