@@ -1,6 +1,8 @@
+use crate::traits::traits::Metric;
+use axum::response::{IntoResponse, Json as AxumJson, Response};
+use serde_json::json;
 use std::any::Any;
 use std::fmt::Debug;
-use crate::traits::traits::Metric;
 
 #[derive(Debug, Clone)]
 pub struct Accuracy(pub f32);
@@ -55,6 +57,16 @@ impl Biathlon {
         Ok(())
     }
 }*/
+impl IntoResponse for Biathlon {
+    fn into_response(self) -> Response {
+        AxumJson(json!({
+            "accuracy": self.accuracy.0,
+            "distance": self.speed.0,
+            "speed:": self.speed.0,
+        }))
+        .into_response()
+    }
+}
 
 impl Metric for Biathlon {
     fn as_any(&self) -> &dyn Any {

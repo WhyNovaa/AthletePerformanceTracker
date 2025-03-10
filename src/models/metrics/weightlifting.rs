@@ -1,6 +1,8 @@
+use crate::traits::traits::Metric;
+use axum::response::{IntoResponse, Json as AxumJson, Response};
+use serde_json::json;
 use std::any::Any;
 use std::fmt::Debug;
-use crate::traits::traits::Metric;
 
 #[derive(Debug, Clone)]
 pub struct Weight(pub f32);
@@ -28,6 +30,16 @@ pub struct WeightLifting {
     pub lifted_weight: LiftedWeight,
 }
 
+impl IntoResponse for WeightLifting {
+    fn into_response(self) -> Response {
+        AxumJson(json!({
+            "weight": self.weight.0,
+            "lifted_weight": self.lifted_weight.0,
+        }))
+        .into_response()
+    }
+}
+
 impl WeightLifting {
     pub fn new(weight: Weight, lifted_weight: LiftedWeight) -> Self {
         Self {
@@ -52,4 +64,3 @@ impl Metric for WeightLifting {
         Box::new(self.clone())
     }
 }
-

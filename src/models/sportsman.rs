@@ -1,8 +1,8 @@
 use std::fmt;
 use std::fmt::Formatter;
 
-#[derive(Debug, Clone, Hash, Eq, PartialEq)]
-pub struct Sportsman(String);
+#[derive(Debug, Hash, Eq, PartialEq)]
+pub struct Sportsman(pub String);
 
 impl Sportsman {
     pub fn new(name: String) -> Self {

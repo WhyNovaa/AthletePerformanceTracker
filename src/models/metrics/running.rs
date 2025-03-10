@@ -1,8 +1,11 @@
+use crate::traits::traits::Metric;
+use axum::response::{IntoResponse, Json as AxumJson, Response};
+use serde::Serialize;
+use serde_json::json;
 use std::any::Any;
 use std::fmt::Debug;
-use crate::traits::traits::Metric;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Distance(pub f32);
 
 impl Distance {
@@ -11,7 +14,7 @@ impl Distance {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Speed(pub f32);
 
 impl Speed {
@@ -30,10 +33,7 @@ pub struct Running {
 
 impl Running {
     pub fn new(distance: Distance, speed: Speed) -> Self {
-        Self {
-            distance,
-            speed,
-        }
+        Self { distance, speed }
     }
 }
 
@@ -43,7 +43,15 @@ impl Running {
         Ok(())
     }
 }*/
-
+impl IntoResponse for Running {
+    fn into_response(self) -> Response {
+        AxumJson(json!({
+            "distance": self.speed.0,
+            "speed:": self.speed.0,
+        }))
+        .into_response()
+    }
+}
 
 impl Metric for Running {
     fn as_any(&self) -> &dyn Any {
