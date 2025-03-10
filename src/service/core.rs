@@ -1,5 +1,5 @@
 use axum::response::IntoResponse;
-use crate::models::error::Responses;
+use crate::models::responses::Responses;
 use crate::models::metrics::biathlon::Biathlon;
 use crate::models::metrics::running::Running;
 use crate::models::metrics::weightlifting::WeightLifting;
@@ -105,7 +105,7 @@ async fn get_performance<T: Metric + Clone>(
     }
 }
 
-async fn add_performance<T, P>(
+async fn add_performance<T, P> (
     Extension(tracker): Extension<Arc<PerformanceTracker>>,
     Path(name): Path<String>,
     Json(performance): Json<P>,
@@ -119,6 +119,7 @@ where
     let response_name = metric.response_name();
 
     tracker.add_performance(sportsman, Box::new(metric)).await;
+    log::info!("Performance was added");
 
     Responses::PerformanceAdded(response_name).into_response()
 }
