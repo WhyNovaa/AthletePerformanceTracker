@@ -49,13 +49,6 @@ impl WeightLifting {
     }
 }
 
-/*impl Debug for WeightLifting {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "Weight: {}, Lifted weight: {}", self.weight.0, self.lifted_weight.0)?;
-        Ok(())
-    }
-}*/
-
 impl Metric for WeightLifting {
     fn as_any(&self) -> &dyn Any {
         self

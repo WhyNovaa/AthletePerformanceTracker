@@ -37,12 +37,6 @@ impl Running {
     }
 }
 
-/*impl Debug for Running {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "Distance: {}, Speed: {}", self.distance.0, self.speed.0)?;
-        Ok(())
-    }
-}*/
 impl IntoResponse for Running {
     fn into_response(self) -> Response {
         AxumJson(json!({

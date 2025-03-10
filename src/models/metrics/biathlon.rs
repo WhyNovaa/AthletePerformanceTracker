@@ -51,12 +51,6 @@ impl Biathlon {
     }
 }
 
-/*impl Debug for Biathlon {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "Accuracy: {}, Distance: {}, Speed: {}", self.accuracy.0, self.distance.0, self.speed.0)?;
-        Ok(())
-    }
-}*/
 impl IntoResponse for Biathlon {
     fn into_response(self) -> Response {
         AxumJson(json!({
