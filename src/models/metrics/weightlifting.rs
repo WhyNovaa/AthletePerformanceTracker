@@ -30,6 +30,15 @@ pub struct WeightLifting {
     pub lifted_weight: LiftedWeight,
 }
 
+impl WeightLifting {
+    pub fn new(weight: Weight, lifted_weight: LiftedWeight) -> Self {
+        Self {
+            weight,
+            lifted_weight,
+        }
+    }
+}
+
 impl IntoResponse for WeightLifting {
     fn into_response(self) -> Response {
         AxumJson(json!({
@@ -40,20 +49,15 @@ impl IntoResponse for WeightLifting {
     }
 }
 
-impl WeightLifting {
-    pub fn new(weight: Weight, lifted_weight: LiftedWeight) -> Self {
-        Self {
-            weight,
-            lifted_weight,
-        }
-    }
-}
-
 impl Metric for WeightLifting {
     fn as_any(&self) -> &dyn Any {
         self
     }
     fn clone_box(&self) -> Box<dyn Metric> {
         Box::new(self.clone())
+    }
+
+    fn response_name(&self) -> &'static str {
+        "WeightLifting"
     }
 }

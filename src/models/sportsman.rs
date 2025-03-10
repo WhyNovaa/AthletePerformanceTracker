@@ -2,7 +2,7 @@ use std::fmt;
 use std::fmt::Formatter;
 
 #[derive(Debug, Hash, Eq, PartialEq)]
-pub struct Sportsman(pub String);
+pub struct Sportsman(String);
 
 impl Sportsman {
     pub fn new(name: String) -> Self {

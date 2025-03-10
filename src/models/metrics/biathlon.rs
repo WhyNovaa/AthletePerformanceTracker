@@ -55,7 +55,7 @@ impl IntoResponse for Biathlon {
     fn into_response(self) -> Response {
         AxumJson(json!({
             "accuracy": self.accuracy.0,
-            "distance": self.speed.0,
+            "distance": self.distance.0,
             "speed:": self.speed.0,
         }))
         .into_response()
@@ -68,5 +68,9 @@ impl Metric for Biathlon {
     }
     fn clone_box(&self) -> Box<dyn Metric> {
         Box::new(self.clone())
+    }
+
+    fn response_name(&self) -> &'static str {
+        "Biathlon"
     }
 }

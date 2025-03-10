@@ -40,7 +40,7 @@ impl Running {
 impl IntoResponse for Running {
     fn into_response(self) -> Response {
         AxumJson(json!({
-            "distance": self.speed.0,
+            "distance": self.distance.0,
             "speed:": self.speed.0,
         }))
         .into_response()
@@ -54,5 +54,9 @@ impl Metric for Running {
 
     fn clone_box(&self) -> Box<dyn Metric> {
         Box::new(self.clone())
+    }
+
+    fn response_name(&self) -> &'static str {
+        "Running"
     }
 }

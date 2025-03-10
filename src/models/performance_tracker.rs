@@ -9,7 +9,7 @@ type Performances = Arc<RwLock<HashMap<Sportsman, Metrics>>>;
 
 #[derive(Debug)]
 pub struct PerformanceTracker {
-    pub performances: Performances,
+    performances: Performances,
 }
 
 impl PerformanceTracker {

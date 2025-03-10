@@ -6,6 +6,7 @@ use std::fmt::Debug;
 pub trait Metric: Any + Debug + IntoResponse + Sync + Send {
     fn as_any(&self) -> &dyn Any;
     fn clone_box(&self) -> Box<dyn Metric>;
+    fn response_name(&self) -> &'static str;
 }
 
 pub trait SportPerformance {
