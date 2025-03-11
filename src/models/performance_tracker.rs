@@ -58,11 +58,9 @@ impl SportPerformance for PerformanceTracker {
         let mut perf_guard = self.performances.write().await;
 
         if let Some(existing_metrics) = perf_guard.get_mut(&sportsman) {
-            for (ind, metric) in existing_metrics.iter_mut().enumerate() {
-                if metric.as_any().type_id() == TypeId::of::<T>() {
-                    existing_metrics.remove(ind);
-                    return Ok(());
-                }
+            if let Some(ind) = existing_metrics.iter().position(|m| m.as_any().type_id() == TypeId::of::<T>()) {
+                existing_metrics.swap_remove(ind);
+                return Ok(());
             }
             Err(Error::SportsmanDoesntHasMetric)
         } else {
