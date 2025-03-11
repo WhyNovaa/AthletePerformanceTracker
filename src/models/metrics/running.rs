@@ -8,20 +8,8 @@ use std::fmt::Debug;
 #[derive(Debug, Clone, Serialize)]
 pub struct Distance(pub f32);
 
-impl Distance {
-    pub fn dist(&self) -> f32 {
-        self.0
-    }
-}
-
 #[derive(Debug, Clone, Serialize)]
 pub struct Speed(pub f32);
-
-impl Speed {
-    pub fn speed(&self) -> f32 {
-        self.0
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct Running {

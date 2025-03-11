@@ -8,10 +8,6 @@ impl Sportsman {
     pub fn new(name: String) -> Self {
         Self(name)
     }
-
-    pub fn name(&self) -> String {
-        self.0.clone()
-    }
 }
 
 impl fmt::Display for Sportsman {

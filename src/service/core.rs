@@ -11,7 +11,6 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Extension, Json, Router};
 
-use crate::models::error::Error;
 use crate::service::models::{BiathlonPerformance, RunningPerformance, WeightLiftingPerformance};
 use std::fmt::Display;
 use std::sync::Arc;

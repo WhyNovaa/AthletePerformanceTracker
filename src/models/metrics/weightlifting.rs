@@ -7,20 +7,8 @@ use std::fmt::Debug;
 #[derive(Debug, Clone)]
 pub struct Weight(pub f32);
 
-impl Weight {
-    pub fn weight(&self) -> f32 {
-        self.0
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct LiftedWeight(pub f32);
-
-impl LiftedWeight {
-    pub fn lifted_weight(&self) -> f32 {
-        self.0
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct WeightLifting {
