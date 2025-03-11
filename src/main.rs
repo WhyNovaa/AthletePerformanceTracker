@@ -8,7 +8,7 @@ mod service;
 mod traits;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>>{
     dotenv().ok();
     env_logger::init();
 
@@ -20,6 +20,13 @@ async fn main() {
 
     let connection = postgres::PgPool::connect(database_url.as_str()).await.expect("Connection error");
 
+    let req = "SELECT * FROM Sportsmen";
+    let res = sqlx::query(req)
+        .execute(&connection)
+        .await?;
+    println!("{:?}", res);
     let url = URL(env::var("SERVICE_URL").expect("SERVICE_URL not found in .env file"));
     let _ = Service::new(url).await.start().await;
+
+    Ok(())
 }

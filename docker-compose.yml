@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   athlete-service:
     build:
@@ -8,7 +6,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - pg
+      pg:
+        condition: service_healthy
 
   pg:
     image: postgres:latest
@@ -19,4 +18,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
-
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
