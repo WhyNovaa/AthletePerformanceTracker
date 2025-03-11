@@ -1,21 +1,22 @@
-use axum::response::IntoResponse;
-use crate::models::responses::Responses;
 use crate::models::metrics::biathlon::Biathlon;
 use crate::models::metrics::running::Running;
 use crate::models::metrics::weightlifting::WeightLifting;
 use crate::models::performance_tracker::PerformanceTracker;
+use crate::models::responses::Responses;
 use crate::models::sportsman::Sportsman;
 use crate::traits::traits::{Metric, SportPerformance};
 use axum::extract::Path;
+use axum::response::IntoResponse;
 
-use axum::routing::{get, post};
+use axum::routing::{delete, get, post};
 use axum::{Extension, Json, Router};
 
+use crate::models::error::Error;
+use crate::service::models::{BiathlonPerformance, RunningPerformance, WeightLiftingPerformance};
 use std::fmt::Display;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::net::TcpListener;
-use crate::service::models::{BiathlonPerformance, RunningPerformance, WeightLiftingPerformance};
 
 pub struct URL(pub String);
 
@@ -39,7 +40,8 @@ impl Service {
         let tracker = Arc::new(PerformanceTracker::new());
         let router = Router::new()
             .merge(routes_get_performance(Arc::clone(&tracker)))
-            .merge(routes_add_performance(Arc::clone(&tracker)));
+            .merge(routes_add_performance(Arc::clone(&tracker)))
+            .merge(routes_remove_performance(Arc::clone(&tracker)));
 
         Self {
             router,
@@ -77,18 +79,40 @@ fn routes_get_performance(tracker: Arc<PerformanceTracker>) -> Router {
     Router::new()
         .route("/running/{name}", get(get_performance::<Running>))
         .route("/biathlon/{name}", get(get_performance::<Biathlon>))
-        .route("/weight_lifting/{name}", get(get_performance::<WeightLifting>))
+        .route(
+            "/weight_lifting/{name}",
+            get(get_performance::<WeightLifting>),
+        )
         .layer(Extension(tracker))
 }
 
 fn routes_add_performance(tracker: Arc<PerformanceTracker>) -> Router {
     Router::new()
-        .route("/running/{name}", post(add_performance::<Running, RunningPerformance>))
-        .route("/biathlon/{name}", post(add_performance::<Biathlon, BiathlonPerformance>))
-        .route("/weight_lifting/{name}", post(add_performance::<WeightLifting, WeightLiftingPerformance>))
+        .route(
+            "/running/{name}",
+            post(add_performance::<Running, RunningPerformance>),
+        )
+        .route(
+            "/biathlon/{name}",
+            post(add_performance::<Biathlon, BiathlonPerformance>),
+        )
+        .route(
+            "/weight_lifting/{name}",
+            post(add_performance::<WeightLifting, WeightLiftingPerformance>),
+        )
         .layer(Extension(tracker))
 }
 
+fn routes_remove_performance(tracker: Arc<PerformanceTracker>) -> Router {
+    Router::new()
+        .route("/running/{name}", delete(remove_performance::<Running>))
+        .route("/biathlon/{name}", delete(remove_performance::<Biathlon>))
+        .route(
+            "/weight_lifting/{name}",
+            delete(remove_performance::<WeightLifting>),
+        )
+        .layer(Extension(tracker))
+}
 
 async fn get_performance<T: Metric + Clone>(
     Extension(tracker): Extension<Arc<PerformanceTracker>>,
@@ -96,16 +120,19 @@ async fn get_performance<T: Metric + Clone>(
 ) -> impl IntoResponse {
     let sportsman = Sportsman::new(name);
 
-    if let Some(performance) = tracker.get_performance::<T>(&sportsman).await {
-        log::info!("Performance: {:?}", performance);
-        performance.into_response()
-    } else {
-        log::error!("Sportsman wasn't found");
-        Responses::NoSuchSportsman.into_response()
+    match tracker.get_performance::<T>(&sportsman).await {
+        Ok(performance) => {
+            log::info!("Performance: {:?}", performance);
+            performance.into_response()
+        }
+        Err(e) => {
+            log::info!("{}", e);
+            Responses::Errors(e).into_response()
+        }
     }
 }
 
-async fn add_performance<T, P> (
+async fn add_performance<T, P>(
     Extension(tracker): Extension<Arc<PerformanceTracker>>,
     Path(name): Path<String>,
     Json(performance): Json<P>,
@@ -119,7 +146,25 @@ where
     let response_name = metric.response_name();
 
     tracker.add_performance(sportsman, Box::new(metric)).await;
-    log::info!("Performance was added");
+    log::info!("Performance was added successfully");
 
     Responses::PerformanceAdded(response_name).into_response()
+}
+
+async fn remove_performance<T: Metric>(
+    Extension(tracker): Extension<Arc<PerformanceTracker>>,
+    Path(name): Path<String>,
+) -> impl IntoResponse {
+    let sportsman = Sportsman::new(name);
+
+    match tracker.remove_performance::<T>(sportsman).await {
+        Ok(_) => {
+            log::info!("Performance was removed successfully");
+            Responses::PerformanceRemoved.into_response()
+        }
+        Err(e) => {
+            log::info!("{}", e);
+            Responses::Errors(e).into_response()
+        }
+    }
 }

@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
 use crate::models::metrics::biathlon::{Accuracy, Biathlon};
-use crate::models::metrics::{biathlon, running};
 use crate::models::metrics::running::Running;
 use crate::models::metrics::weightlifting::{LiftedWeight, Weight, WeightLifting};
+use crate::models::metrics::{biathlon, running};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RunningPerformance {
@@ -12,10 +12,7 @@ pub struct RunningPerformance {
 
 impl Into<Running> for RunningPerformance {
     fn into(self) -> Running {
-        Running::new(
-            running::Distance(self.distance),
-            running::Speed(self.speed),
-        )
+        Running::new(running::Distance(self.distance), running::Speed(self.speed))
     }
 }
 
@@ -44,9 +41,6 @@ pub struct WeightLiftingPerformance {
 
 impl Into<WeightLifting> for WeightLiftingPerformance {
     fn into(self) -> WeightLifting {
-        WeightLifting::new(
-            Weight(self.weight),
-            LiftedWeight(self.lifted_weight),
-        )
+        WeightLifting::new(Weight(self.weight), LiftedWeight(self.lifted_weight))
     }
 }
