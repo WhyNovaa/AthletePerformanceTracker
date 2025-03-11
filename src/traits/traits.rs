@@ -14,3 +14,7 @@ pub trait SportPerformance {
     async fn get_performance<T: Metric + Clone>(&self, sportsman: &Sportsman) -> Result<T, Error>;
     async fn remove_performance<T: Metric>(&self, sportsman: Sportsman) -> Result<(), Error>;
 }
+
+pub trait Pool {
+    // TODO!
+}

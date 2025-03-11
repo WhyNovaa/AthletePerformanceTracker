@@ -15,6 +15,7 @@ use crate::service::models::{BiathlonPerformance, RunningPerformance, WeightLift
 use std::fmt::Display;
 use std::sync::Arc;
 use std::time::Duration;
+use sqlx::PgPool;
 use tokio::net::TcpListener;
 
 pub struct URL(pub String);
