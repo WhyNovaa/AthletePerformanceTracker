@@ -1,3 +1,4 @@
+use std::env;
 use crate::models::metrics::biathlon::Biathlon;
 use crate::models::metrics::running::Running;
 use crate::models::metrics::weightlifting::WeightLifting;
@@ -17,6 +18,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use sqlx::PgPool;
 use tokio::net::TcpListener;
+use crate::service::postgres::postgres_pool::DBPool;
 
 pub struct URL(pub String);
 
@@ -30,23 +32,31 @@ pub struct Service {
     router: Router,
     tcp_listener: TcpListener,
     tracker: Arc<PerformanceTracker>,
+    pool: Arc<DBPool>,
 }
 
 impl Service {
-    pub async fn new(url: URL) -> Self {
+    pub async fn new() -> Self {
+
+        let url = URL(env::var("SERVICE_URL").expect("SERVICE_URL not found in .env file"));
         let tcp_listener = retry_to_bind(&url)
             .await
             .expect("Error in binding tcp_listener");
+
         let tracker = Arc::new(PerformanceTracker::new());
+
         let router = Router::new()
             .merge(routes_get_performance(Arc::clone(&tracker)))
             .merge(routes_add_performance(Arc::clone(&tracker)))
             .merge(routes_remove_performance(Arc::clone(&tracker)));
 
+        let pool = Arc::new(DBPool::new().await);
+
         Self {
             router,
             tcp_listener,
             tracker,
+            pool
         }
     }
 

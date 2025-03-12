@@ -1,3 +1,3 @@
 pub mod core;
-mod models;
-mod postgres;
+pub mod models;
+pub mod postgres;

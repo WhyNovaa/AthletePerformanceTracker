@@ -1,7 +1,7 @@
 use dotenv::dotenv;
-use std::env;
-use sqlx::postgres;
-use crate::service::core::{Service, URL};
+use crate::models::sportsman::Sportsman;
+use crate::service::core::Service;
+use crate::service::postgres::postgres_pool::DBPool;
 
 mod models;
 mod service;
@@ -12,21 +12,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
     dotenv().ok();
     env_logger::init();
 
-    let user = env::var("POSTGRES_USER").expect("POSTGRES_USER not found in .env file");
-    let password = env::var("POSTGRES_PASSWORD").expect("POSTGRES_PASSWORD not found in .env file");
-    let db = env::var("POSTGRES_DB").expect("POSTGRES_DB not found in .env file");
+    let pool = DBPool::new().await;
+    pool.add_sportsman(&Sportsman::new(String::from("Aboba"))).await.unwrap();
+    let a = pool.get_sportsman_id(&Sportsman::new(String::from("Aboba"))).await.unwrap();
+    println!("{}", a);
 
-    let database_url = format!("postgres://{}:{}@pg:5432/{}", user, password, db);
-
-    let connection = postgres::PgPool::connect(database_url.as_str()).await.expect("Connection error");
-
-    let req = "SELECT * FROM Sportsmen";
-    let res = sqlx::query(req)
-        .execute(&connection)
-        .await?;
-    println!("{:?}", res);
-    let url = URL(env::var("SERVICE_URL").expect("SERVICE_URL not found in .env file"));
-    let _ = Service::new(url).await.start().await;
+    //let _ = Service::new().await.start().await;
 
     Ok(())
 }
