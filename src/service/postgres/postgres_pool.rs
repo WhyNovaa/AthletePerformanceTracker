@@ -138,7 +138,7 @@ impl DBPool {
     }
 
     // TODO! not working
-    pub async fn get_all_metrics<T: Metric>(&self) -> Result<Vec<(Id, T)>, sqlx::Error> {
+    pub async fn get_all_metrics<T: Metric>(&self) -> Result<Vec<(Id, Box<dyn Metric>)>, sqlx::Error> {
         let table_name = match self.get_metric_table_name::<T>() {
             Some(name) => name,
             None => {
@@ -150,59 +150,58 @@ impl DBPool {
 
         let req = format!("SELECT * FROM {}", table_name);
 
-        let res = match TypeId::of::<T>() {
-            id if id == TypeId::of::<Running>() => {
-                sqlx::query_as::<_, (i32, f32, f32)>(req.as_str())
-                    .fetch_all(&self.0)
-                    .await?
-                    .into_iter()
-                    .map(|(id, dist, speed)| {
-                        (
-                            Id(id),
-                            Running::new(running::Distance(dist), running::Speed(speed)),
-                        )
-                    })
-                    .collect()
-            }
-            id if id == TypeId::of::<Biathlon>() => {
-                sqlx::query_as::<_, (i32, f32, f32, f32)>(req.as_str())
-                    .fetch_all(&self.0)
-                    .await?
-                    .into_iter()
-                    .map(|(id, accur, dist, speed)| {
-                        (
-                            Id(id),
-                            Biathlon::new(
-                                biathlon::Accuracy(accur),
-                                biathlon::Distance(dist),
-                                biathlon::Speed(speed),
-                            ),
-                        )
-                    })
-                    .collect()
-            }
-            id if id == TypeId::of::<WeightLifting>() => {
-                sqlx::query_as::<_, (i32, f32, f32)>(req.as_str())
-                    .fetch_all(&self.0)
-                    .await?
-                    .into_iter()
-                    .map(|(id, weight, lifted_weight)| {
-                        (
-                            Id(id),
-                            WeightLifting::new(
-                                weight_lifting::Weight(weight),
-                                weight_lifting::LiftedWeight(lifted_weight),
-                            ),
-                        )
-                    })
-                    .collect()
-            }
-            _ => {
-                return Err(sqlx::Error::TypeNotFound {
-                    type_name: "Unknown metric".to_string(),
+        let res: Vec<(Id, Box<dyn Metric>)> = if TypeId::of::<T>() == TypeId::of::<Running>() {
+            sqlx::query_as::<_, (i32, f32, f32)>(req.as_str())
+                .fetch_all(&self.0)
+                .await?
+                .into_iter()
+                .map(|(id, dist, speed)| {
+                    (
+                        Id(id),
+                        Running::new(running::Distance(dist), running::Speed(speed)).clone_box(),
+                    )
                 })
-            }
+                .collect::<Vec<(Id, Box<dyn Metric>)>>()
+        }
+        else if TypeId::of::<T>() == TypeId::of::<Biathlon>() {
+            sqlx::query_as::<_, (i32, f32, f32, f32)>(req.as_str())
+                .fetch_all(&self.0)
+                .await?
+                .into_iter()
+                .map(|(id, accur, dist, speed)| {
+                    (
+                        Id(id),
+                        Biathlon::new(
+                            biathlon::Accuracy(accur),
+                            biathlon::Distance(dist),
+                            biathlon::Speed(speed),
+                        ).clone_box(),
+                    )
+                })
+                .collect::<Vec<(Id, Box<dyn Metric + 'static>)>>()
+        }
+        else if TypeId::of::<T>() == TypeId::of::<WeightLifting>() {
+            sqlx::query_as::<_, (i32, f32, f32)>(req.as_str())
+                .fetch_all(&self.0)
+                .await?
+                .into_iter()
+                .map(|(id, weight, lifted_weight)| {
+                    (
+                        Id(id),
+                        WeightLifting::new(
+                            weight_lifting::Weight(weight),
+                            weight_lifting::LiftedWeight(lifted_weight),
+                        ).clone_box(),
+                    )
+                })
+                .collect::<Vec<(Id, Box<dyn Metric + 'static>)>>()
+        }
+        else {
+            return Err(sqlx::Error::TypeNotFound {
+                type_name: "Unknown metric".to_string(),
+            });
         };
+
         Ok(res)
     }
 
@@ -332,15 +331,15 @@ impl Pool for DBPool {
         let mut metrics_map: HashMap<Id, Vec<Box<dyn Metric>>> = HashMap::new();
 
         for (id, metric) in running_vec {
-            metrics_map.entry(id).or_insert_with(Vec::new).push(Box::new(metric));
+            metrics_map.entry(id).or_insert_with(Vec::new).push(metric);
         }
 
         for (id, metric) in biathlon_vec {
-            metrics_map.entry(id).or_insert_with(Vec::new).push(Box::new(metric));
+            metrics_map.entry(id).or_insert_with(Vec::new).push(metric);
         }
 
         for (id, metric) in weight_lifting_vec {
-            metrics_map.entry(id).or_insert_with(Vec::new).push(Box::new(metric));
+            metrics_map.entry(id).or_insert_with(Vec::new).push(metric);
         }
 
         for (id, sportsman) in sportsmen {
