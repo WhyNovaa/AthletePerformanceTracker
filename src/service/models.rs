@@ -1,6 +1,6 @@
 use crate::models::metrics::biathlon::{Accuracy, Biathlon};
 use crate::models::metrics::running::Running;
-use crate::models::metrics::weightlifting::{LiftedWeight, Weight, WeightLifting};
+use crate::models::metrics::weight_lifting::{LiftedWeight, Weight, WeightLifting};
 use crate::models::metrics::{biathlon, running};
 use serde::{Deserialize, Serialize};
 
@@ -44,3 +44,6 @@ impl Into<WeightLifting> for WeightLiftingPerformance {
         WeightLifting::new(Weight(self.weight), LiftedWeight(self.lifted_weight))
     }
 }
+
+#[derive(Eq, PartialEq, Hash, Debug)]
+pub struct Id(pub i32);

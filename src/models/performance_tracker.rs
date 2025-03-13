@@ -15,7 +15,12 @@ pub struct PerformanceTracker {
 }
 
 impl PerformanceTracker {
-    pub fn new() -> Self {
+    pub fn new(sportsmen_to_metrics: HashMap<Sportsman, Metrics>) -> Self {
+        Self {
+            performances: Arc::new(RwLock::new(sportsmen_to_metrics))
+        }
+    }
+    pub fn default() -> Self {
         Self {
             performances: Performances::new(Default::default()),
         }
@@ -58,7 +63,10 @@ impl SportPerformance for PerformanceTracker {
         let mut perf_guard = self.performances.write().await;
 
         if let Some(existing_metrics) = perf_guard.get_mut(&sportsman) {
-            if let Some(ind) = existing_metrics.iter().position(|m| m.as_any().type_id() == TypeId::of::<T>()) {
+            if let Some(ind) = existing_metrics
+                .iter()
+                .position(|m| m.as_any().type_id() == TypeId::of::<T>())
+            {
                 existing_metrics.swap_remove(ind);
                 return Ok(());
             }

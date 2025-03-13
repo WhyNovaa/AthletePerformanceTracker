@@ -1,24 +1,24 @@
-use std::env;
 use crate::models::metrics::biathlon::Biathlon;
 use crate::models::metrics::running::Running;
-use crate::models::metrics::weightlifting::WeightLifting;
+use crate::models::metrics::weight_lifting::WeightLifting;
 use crate::models::performance_tracker::PerformanceTracker;
 use crate::models::responses::Responses;
 use crate::models::sportsman::Sportsman;
 use crate::traits::traits::{Metric, SportPerformance};
 use axum::extract::Path;
 use axum::response::IntoResponse;
+use std::env;
 
 use axum::routing::{delete, get, post};
 use axum::{Extension, Json, Router};
 
 use crate::service::models::{BiathlonPerformance, RunningPerformance, WeightLiftingPerformance};
+use crate::service::postgres::postgres_pool::DBPool;
+use sqlx::PgPool;
 use std::fmt::Display;
 use std::sync::Arc;
 use std::time::Duration;
-use sqlx::PgPool;
 use tokio::net::TcpListener;
-use crate::service::postgres::postgres_pool::DBPool;
 
 pub struct URL(pub String);
 
@@ -37,13 +37,12 @@ pub struct Service {
 
 impl Service {
     pub async fn new() -> Self {
-
         let url = URL(env::var("SERVICE_URL").expect("SERVICE_URL not found in .env file"));
         let tcp_listener = retry_to_bind(&url)
             .await
             .expect("Error in binding tcp_listener");
 
-        let tracker = Arc::new(PerformanceTracker::new());
+        let tracker = Arc::new(PerformanceTracker::default());
 
         let router = Router::new()
             .merge(routes_get_performance(Arc::clone(&tracker)))
@@ -56,7 +55,7 @@ impl Service {
             router,
             tcp_listener,
             tracker,
-            pool
+            pool,
         }
     }
 
