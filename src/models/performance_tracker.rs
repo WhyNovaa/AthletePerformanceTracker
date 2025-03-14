@@ -3,11 +3,10 @@ use crate::models::sportsman::Sportsman;
 use crate::traits::traits::{Metric, SportPerformance};
 use std::any::TypeId;
 use std::collections::HashMap;
-use std::sync::Arc;
 use tokio::sync::RwLock;
 
 pub type Metrics = Vec<Box<dyn Metric>>;
-type Performances = Arc<RwLock<HashMap<Sportsman, Metrics>>>;
+type Performances = RwLock<HashMap<Sportsman, Metrics>>;
 
 #[derive(Debug)]
 pub struct PerformanceTracker {
@@ -17,12 +16,7 @@ pub struct PerformanceTracker {
 impl PerformanceTracker {
     pub fn new(sportsmen_to_metrics: HashMap<Sportsman, Metrics>) -> Self {
         Self {
-            performances: Arc::new(RwLock::new(sportsmen_to_metrics))
-        }
-    }
-    pub fn default() -> Self {
-        Self {
-            performances: Performances::new(Default::default()),
+            performances: RwLock::new(sportsmen_to_metrics),
         }
     }
 }
@@ -49,8 +43,8 @@ impl SportPerformance for PerformanceTracker {
 
         if let Some(metrics) = perf_guard.get(sportsman) {
             for metric in metrics.iter() {
-                if let Some(metric_as_T) = metric.as_any().downcast_ref::<T>() {
-                    return Ok(metric_as_T.clone());
+                if let Some(down_casted) = metric.as_any().downcast_ref::<T>() {
+                    return Ok(down_casted.clone());
                 }
             }
             Err(Error::SportsmanDoesntHasMetric)

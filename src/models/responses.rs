@@ -5,6 +5,7 @@ use serde_json::json;
 pub enum Responses {
     PerformanceAdded(&'static str),
     PerformanceRemoved,
+    PerformanceNotFound,
     Errors(Error),
 }
 
@@ -19,6 +20,11 @@ impl IntoResponse for Responses {
             Responses::PerformanceRemoved => AxumJson(json!({
             "status": "200",
             "message": "performance removed successfully",
+            }))
+            .into_response(),
+            Responses::PerformanceNotFound => AxumJson(json!({
+            "status": "404",
+            "message": "performance not found",
             }))
             .into_response(),
             Responses::Errors(e) => e.into_response(),
