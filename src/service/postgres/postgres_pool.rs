@@ -6,7 +6,7 @@ use crate::models::performance_tracker::{Metrics, PerformanceTracker};
 use crate::models::sportsman::Sportsman;
 use crate::service::models::Id;
 use crate::traits::traits::{Metric, Pool};
-use sqlx::{PgPool, Row};
+use sqlx::{Error, PgPool, Row};
 use std::any::TypeId;
 use std::collections::HashMap;
 use std::env;
@@ -42,7 +42,7 @@ impl DBPool {
         }
     }
 
-    pub async fn get_all_sportsmen(&self) -> Result<Vec<(Id, Sportsman)>, sqlx::Error> {
+    pub(crate) async fn get_all_sportsmen(&self) -> Result<Vec<(Id, Sportsman)>, sqlx::Error> {
         let req = format!("SELECT * FROM {}", self.get_sportsmen_table_name());
 
         let res = sqlx::query_as::<_, (i32, String)>(req.as_str())
@@ -55,11 +55,12 @@ impl DBPool {
         Ok(res)
     }
 
-    pub async fn add_sportsman(&self, sportsman: &Sportsman) -> Result<(), sqlx::Error> {
-        let req = format!(
-            "INSERT INTO {} (name) VALUES($1);",
-            self.get_sportsmen_table_name()
-        );
+    async fn add_sportsman_if_not_exists(&self, sportsman: &Sportsman) -> Result<(), sqlx::Error> {
+        if self.if_sportsman_exists(sportsman).await? {
+            return Ok(())
+        }
+
+        let req = format!("INSERT INTO {} (name) VALUES ($1);", self.get_sportsmen_table_name());
 
         let _ = sqlx::query(req.as_str())
             .bind(sportsman.name())
@@ -68,7 +69,7 @@ impl DBPool {
 
         Ok(())
     }
-    pub async fn get_sportsman_id(&self, sportsman: &Sportsman) -> Result<i32, sqlx::Error> {
+    async fn get_sportsman_id(&self, sportsman: &Sportsman) -> Result<i32, sqlx::Error> {
         let req = format!(
             "SELECT id FROM {} WHERE name=$1",
             self.get_sportsmen_table_name()
@@ -84,7 +85,7 @@ impl DBPool {
         Ok(id)
     }
 
-    pub async fn add_metric<T: Metric>(
+    async fn add_metric<T: Metric>(
         &self,
         sportsman_id: i32,
         metric: T,
@@ -122,22 +123,24 @@ impl DBPool {
 
         if let Some(running) = metric.as_any().downcast_ref::<Running>() {
             query_builder = query_builder.bind(running.distance.0).bind(running.speed.0);
-        } else if let Some(biathlon) = metric.as_any().downcast_ref::<Biathlon>() {
+        }
+        else if let Some(biathlon) = metric.as_any().downcast_ref::<Biathlon>() {
             query_builder = query_builder
                 .bind(biathlon.accuracy.0)
                 .bind(biathlon.distance.0)
                 .bind(biathlon.speed.0);
-        } else if let Some(weight_lifting) = metric.as_any().downcast_ref::<WeightLifting>() {
+        }
+        else if let Some(weight_lifting) = metric.as_any().downcast_ref::<WeightLifting>() {
             query_builder = query_builder
                 .bind(weight_lifting.weight.0)
                 .bind(weight_lifting.lifted_weight.0);
         }
 
         query_builder.execute(&self.0).await?;
+
         Ok(())
     }
 
-    // TODO! not working
     pub async fn get_all_metrics<T: Metric>(&self) -> Result<Vec<(Id, Box<dyn Metric>)>, sqlx::Error> {
         let table_name = match self.get_metric_table_name::<T>() {
             Some(name) => name,
@@ -151,26 +154,26 @@ impl DBPool {
         let req = format!("SELECT * FROM {}", table_name);
 
         let res: Vec<(Id, Box<dyn Metric>)> = if TypeId::of::<T>() == TypeId::of::<Running>() {
-            sqlx::query_as::<_, (i32, f32, f32)>(req.as_str())
+            sqlx::query_as::<_, (i32, f32, f32, i32)>(req.as_str())
                 .fetch_all(&self.0)
                 .await?
                 .into_iter()
-                .map(|(id, dist, speed)| {
+                .map(|(_, dist, speed, s_id)| {
                     (
-                        Id(id),
+                        Id(s_id),
                         Running::new(running::Distance(dist), running::Speed(speed)).clone_box(),
                     )
                 })
                 .collect::<Vec<(Id, Box<dyn Metric>)>>()
         }
         else if TypeId::of::<T>() == TypeId::of::<Biathlon>() {
-            sqlx::query_as::<_, (i32, f32, f32, f32)>(req.as_str())
+            sqlx::query_as::<_, (i32, f32, f32, f32, i32)>(req.as_str())
                 .fetch_all(&self.0)
                 .await?
                 .into_iter()
-                .map(|(id, accur, dist, speed)| {
+                .map(|(_, accur, dist, speed, s_id)| {
                     (
-                        Id(id),
+                        Id(s_id),
                         Biathlon::new(
                             biathlon::Accuracy(accur),
                             biathlon::Distance(dist),
@@ -181,13 +184,13 @@ impl DBPool {
                 .collect::<Vec<(Id, Box<dyn Metric + 'static>)>>()
         }
         else if TypeId::of::<T>() == TypeId::of::<WeightLifting>() {
-            sqlx::query_as::<_, (i32, f32, f32)>(req.as_str())
+            sqlx::query_as::<_, (i32, f32, f32, i32)>(req.as_str())
                 .fetch_all(&self.0)
                 .await?
                 .into_iter()
-                .map(|(id, weight, lifted_weight)| {
+                .map(|(_, weight, lifted_weight, s_id)| {
                     (
-                        Id(id),
+                        Id(s_id),
                         WeightLifting::new(
                             weight_lifting::Weight(weight),
                             weight_lifting::LiftedWeight(lifted_weight),
@@ -205,7 +208,18 @@ impl DBPool {
         Ok(res)
     }
 
-    pub async fn if_metric_exists<T: Metric>(
+    async fn if_sportsman_exists(&self, sportsman: &Sportsman) -> Result<bool, sqlx::Error> {
+        let req = format!("SELECT FROM {} WHERE name=$1", self.get_sportsmen_table_name());
+
+        let res = sqlx::query(req.as_str())
+            .bind(sportsman.name())
+            .fetch_optional(&self.0)
+            .await?;
+
+        Ok(res.is_some())
+    }
+
+    async fn if_metric_exists<T: Metric>(
         &self,
         sportsman_id: i32,
     ) -> Result<bool, sqlx::Error> {
@@ -228,7 +242,7 @@ impl DBPool {
         Ok(res.is_some())
     }
 
-    pub async fn remove_metric_if_exists<T: Metric>(
+    async fn remove_metric_if_exists<T: Metric>(
         &self,
         sportsman_id: i32,
     ) -> Result<bool, sqlx::Error> {
@@ -319,7 +333,7 @@ impl Pool for DBPool {
         self.remove_metric_if_exists::<T>(id).await
     }
 
-    async fn load_performance_tracker(&self) -> Result<PerformanceTracker, sqlx::Error> {
+    async fn get_performance_tracker(&self) -> Result<PerformanceTracker, sqlx::Error> {
         let sportsmen = self.get_all_sportsmen().await?;
 
         let running_vec = self.get_all_metrics::<Running>().await?;
@@ -348,5 +362,9 @@ impl Pool for DBPool {
         }
 
         Ok(PerformanceTracker::new(sportsmen_to_metrics))
+    }
+
+    async fn add_sportsman(&self, sportsman: &Sportsman) -> Result<(), Error> {
+        self.add_sportsman_if_not_exists(sportsman).await
     }
 }

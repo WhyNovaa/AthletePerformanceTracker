@@ -27,5 +27,6 @@ pub trait Pool {
         &self,
         sportsman: &Sportsman,
     ) -> Result<bool, sqlx::error::Error>;
-    async fn load_performance_tracker(&self) -> Result<PerformanceTracker, sqlx::Error>;
+    async fn get_performance_tracker(&self) -> Result<PerformanceTracker, sqlx::Error>;
+    async fn add_sportsman(&self, sportsman: &Sportsman) -> Result<(), sqlx::Error>;
 }
