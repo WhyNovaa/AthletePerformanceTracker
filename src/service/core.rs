@@ -19,6 +19,21 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::net::TcpListener;
 
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
+
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        get_running_performance,
+        get_biathlon_performance,
+        get_weight_lifting_performance,
+    ),
+    components()
+)]
+struct ApiDoc;
+
+
 pub struct Url(pub String);
 
 impl Display for Url {
@@ -50,6 +65,7 @@ impl Service {
             .expect("Error in binding tcp_listener");
 
         let router = Router::new()
+            .merge(SwaggerUi::new("/swagger").url("/api-docs/openapi.json", ApiDoc::openapi()))
             .merge(routes_get_performance(Arc::clone(&tracker)))
             .merge(routes_add_performance(
                 Arc::clone(&tracker),
@@ -95,11 +111,11 @@ async fn retry_to_bind(url: &Url) -> Result<TcpListener, ()> {
 
 fn routes_get_performance(tracker: Arc<PerformanceTracker>) -> Router {
     Router::new()
-        .route("/running/{name}", get(get_performance::<Running>))
-        .route("/biathlon/{name}", get(get_performance::<Biathlon>))
+        .route("/running/{name}", get(get_running_performance))
+        .route("/biathlon/{name}", get(get_biathlon_performance))
         .route(
             "/weight_lifting/{name}",
-            get(get_performance::<WeightLifting>),
+            get(get_weight_lifting_performance),
         )
         .layer(Extension(tracker))
 }
@@ -131,6 +147,65 @@ fn routes_remove_performance(tracker: Arc<PerformanceTracker>, pool: Arc<DBPool>
         )
         .layer(Extension((tracker, pool)))
 }
+
+
+
+#[utoipa::path(
+    method(get),
+    path = "/running/{name}",
+    params(
+        ("name" = String, description = "Имя спортсмена")
+    ),
+    responses(
+        (status = 200, description = "Успешный ответ", body = Running),
+        (status = 404, description = "Не найдено", body = serde_json::Value, example = json!({ "message": "performance not found" }))
+    )
+)]
+async fn get_running_performance(
+    Extension(tracker): Extension<Arc<PerformanceTracker>>,
+    Path(name): Path<String>,
+) -> impl IntoResponse {
+    get_performance::<Running>(Extension(tracker), Path(name)).await
+}
+
+#[utoipa::path(
+    method(get),
+    path = "/biathlon/{name}",
+    params(
+        ("name" = String, description = "Имя спортсмена")
+    ),
+    responses(
+        (status = 200, description = "Успешный ответ", body = Biathlon),
+        (status = 404, description = "Не найдено", body = serde_json::Value, example = json!({ "message": "performance not found" }))
+    )
+)]
+async fn get_biathlon_performance(
+    Extension(tracker): Extension<Arc<PerformanceTracker>>,
+    Path(name): Path<String>,
+) -> impl IntoResponse {
+    get_performance::<Biathlon>(Extension(tracker), Path(name)).await
+}
+
+#[utoipa::path(
+    method(get),
+    path = "/weight_lifting/{name}",
+    params(
+        ("name" = String, description = "Имя спортсмена")
+    ),
+    responses(
+        (status = 200, description = "Успешный ответ", body = WeightLifting),
+        (status = 404, description = "Не найдено", body = serde_json::Value, example = json!({ "message": "performance not found" }))
+    )
+)]
+
+async fn get_weight_lifting_performance(
+    Extension(tracker): Extension<Arc<PerformanceTracker>>,
+    Path(name): Path<String>,
+) -> impl IntoResponse {
+    get_performance::<WeightLifting>(Extension(tracker), Path(name)).await
+}
+
+
 
 async fn get_performance<T: Metric + Clone>(
     Extension(tracker): Extension<Arc<PerformanceTracker>>,
