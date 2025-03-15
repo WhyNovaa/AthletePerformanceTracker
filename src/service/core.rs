@@ -21,7 +21,7 @@ use axum::http::StatusCode;
 use serde_json::json;
 use tokio::net::TcpListener;
 
-use utoipa::OpenApi;
+use utoipa::{OpenApi, ToSchema};
 use utoipa_swagger_ui::SwaggerUi;
 
 #[derive(OpenApi)]
@@ -140,9 +140,23 @@ fn routes_remove_performance(tracker: Arc<PerformanceTracker>, pool: Arc<DBPool>
         ("name" = String, Path, description = "Имя спортсмена")
     ),
     responses(
-        (status = 200, description = "Успешный ответ", body = WeightLifting),
+        (status = 200, description = "Успешный ответ", body = serde_json::Value, examples(
+            ("running_example" = (summary = "Running example", value = json!({
+                "distance": 999.9,
+                "speed": 123.2
+            }))),
+            ("biathlon_example" = (summary = "Biathlon example", value = json!({
+                "accuracy": 18.9,
+                "distance": 20.3,
+                "speed": 888
+            }))),
+            ("weight_lifting_example" = (summary = "Weight lifting example", value = json!({
+                "weight": 120,
+                "lifted_weight": 460
+            })))
+        )),
         (status = 400, description = "Плохой запрос", body = serde_json::Value, example = json!({ "message": "Name too long" })),
-        (status = 404, description = "Не найдено", body = serde_json::Value, example = json!({ "message": "performance not found" }))
+        (status = 404, description = "Не найдено", body = serde_json::Value, example = json!({ "message": "Performance not found" }))
     )
 )]
 async fn get_performance_by_sport(
