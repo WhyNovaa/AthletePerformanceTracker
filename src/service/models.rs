@@ -3,8 +3,9 @@ use crate::models::metrics::running::Running;
 use crate::models::metrics::weight_lifting::{LiftedWeight, Weight, WeightLifting};
 use crate::models::metrics::{biathlon, running};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct RunningPerformance {
     distance: f32,
     speed: f32,
@@ -17,7 +18,7 @@ impl Into<Running> for RunningPerformance {
 }
 
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct BiathlonPerformance {
     accuracy: f32,
     distance: f32,
@@ -34,7 +35,7 @@ impl Into<Biathlon> for BiathlonPerformance {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct WeightLiftingPerformance {
     weight: f32,
     lifted_weight: f32,

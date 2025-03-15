@@ -10,6 +10,8 @@ pub enum Responses {
     PerformanceAdded(&'static str),
     PerformanceRemoved,
     PerformanceNotFound,
+    SportsmanNotFound,
+    InvalidPerformanceFormat(&'static str),
     Errors(Error),
 }
 
@@ -18,7 +20,9 @@ impl IntoResponse for Responses {
         let status = match self {
             Responses::PerformanceAdded(_) => StatusCode::OK,
             Responses::PerformanceRemoved => StatusCode::OK,
-            Responses::PerformanceNotFound => StatusCode::OK,
+            Responses::PerformanceNotFound => StatusCode::NOT_FOUND,
+            Responses::SportsmanNotFound => StatusCode::NOT_FOUND,
+            Responses::InvalidPerformanceFormat(_) => StatusCode::BAD_REQUEST,
             Responses::Errors(_) => StatusCode::NOT_FOUND,
         };
         match self {
@@ -30,13 +34,25 @@ impl IntoResponse for Responses {
             }
             Responses::PerformanceRemoved => {
                 let json = json!({
-                    "message": "performance removed successfully",
+                    "message": "Performance removed successfully",
                 });
                 (status, AxumJson(json)).into_response()
             }
             Responses::PerformanceNotFound => {
                 let json = json!({
-                    "message": "performance not found",
+                    "message": "Performance not found",
+                });
+                (status, AxumJson(json)).into_response()
+            },
+            Responses::SportsmanNotFound => {
+                let json = json!({
+                    "message": "Sportsman not found",
+                });
+                (status, AxumJson(json)).into_response()
+            },
+            Responses::InvalidPerformanceFormat(name) => {
+                let json = json!({
+                    "message": format!("Invalid {} format", name),
                 });
                 (status, AxumJson(json)).into_response()
             }
