@@ -1,8 +1,8 @@
 use crate::traits::traits::Metric;
 
-pub mod running;
 pub mod biathlon;
-pub mod weightlifting;
+pub mod running;
+pub mod weight_lifting;
 
 impl Clone for Box<dyn Metric> {
     fn clone(&self) -> Box<dyn Metric> {
