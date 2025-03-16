@@ -1,7 +1,11 @@
+use axum::http::StatusCode;
 use axum::response::{IntoResponse, Json as AxumJson, Response};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fmt::{Display, Formatter};
+use utoipa::ToSchema;
 
+#[derive(Serialize, Deserialize, ToSchema)]
 pub enum Error {
     SportsmanNotFound,
     SportsmanDoesntHasMetric,
@@ -25,16 +29,19 @@ impl Display for Error {
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         let status = match self {
-            Error::SportsmanNotFound => "404",
-            Error::SportsmanDoesntHasMetric => "404",
-            Error::SaveError => "500",
-            Error::RemoveError => "500",
-            Error::NameTooLong => "400",
+            Error::SportsmanNotFound => StatusCode::NOT_FOUND,
+            Error::SportsmanDoesntHasMetric => StatusCode::NOT_FOUND,
+            Error::SaveError => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::RemoveError => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::NameTooLong => StatusCode::BAD_REQUEST,
         };
-        AxumJson(json!({
-            "status": status,
-            "message:": self.to_string(),
-        }))
-        .into_response()
+
+        (
+            status,
+            AxumJson(json!({
+                "message": self.to_string(),
+            })),
+        )
+            .into_response()
     }
 }

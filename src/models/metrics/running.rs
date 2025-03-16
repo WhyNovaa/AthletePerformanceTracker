@@ -1,17 +1,17 @@
 use crate::traits::traits::Metric;
 use axum::response::{IntoResponse, Json as AxumJson, Response};
-use serde::Serialize;
 use serde_json::json;
 use std::any::Any;
 use std::fmt::Debug;
+use utoipa::ToSchema;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, ToSchema)]
 pub struct Distance(pub f32);
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, ToSchema)]
 pub struct Speed(pub f32);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, ToSchema)]
 pub struct Running {
     /// distance in km
     pub distance: Distance,
