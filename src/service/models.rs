@@ -17,7 +17,6 @@ impl Into<Running> for RunningPerformance {
     }
 }
 
-
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct BiathlonPerformance {
     accuracy: f32,

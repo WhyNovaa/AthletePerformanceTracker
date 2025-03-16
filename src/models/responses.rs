@@ -1,5 +1,5 @@
-use axum::http::StatusCode;
 use crate::models::error::Error;
+use axum::http::StatusCode;
 use axum::response::{IntoResponse, Json as AxumJson, Response};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -43,13 +43,13 @@ impl IntoResponse for Responses {
                     "message": "Performance not found",
                 });
                 (status, AxumJson(json)).into_response()
-            },
+            }
             Responses::SportsmanNotFound => {
                 let json = json!({
                     "message": "Sportsman not found",
                 });
                 (status, AxumJson(json)).into_response()
-            },
+            }
             Responses::InvalidPerformanceFormat(name) => {
                 let json = json!({
                     "message": format!("Invalid {} format", name),

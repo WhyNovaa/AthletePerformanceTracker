@@ -12,16 +12,16 @@ use std::env;
 use crate::models::error::Error;
 use crate::service::models::{BiathlonPerformance, RunningPerformance, WeightLiftingPerformance};
 use crate::service::postgres::postgres_pool::DBPool;
+use axum::http::StatusCode;
 use axum::routing::{delete, get, post};
 use axum::{Extension, Json, Router};
+use serde_json::json;
 use std::fmt::Display;
 use std::sync::Arc;
 use std::time::Duration;
-use axum::http::StatusCode;
-use serde_json::json;
 use tokio::net::TcpListener;
 
-use utoipa::{OpenApi, ToSchema};
+use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 #[derive(OpenApi)]
@@ -34,7 +34,6 @@ use utoipa_swagger_ui::SwaggerUi;
     components()
 )]
 struct ApiDoc;
-
 
 pub struct Url(pub String);
 
@@ -119,10 +118,7 @@ fn routes_get_performance(tracker: Arc<PerformanceTracker>) -> Router {
 
 fn routes_add_performance(tracker: Arc<PerformanceTracker>, pool: Arc<DBPool>) -> Router {
     Router::new()
-        .route(
-            "/{sport}/{name}",
-            post(add_performance_by_sport),
-        )
+        .route("/{sport}/{name}", post(add_performance_by_sport))
         .layer(Extension((tracker, pool)))
 }
 
@@ -164,10 +160,20 @@ async fn get_performance_by_sport(
     Path((sport, name)): Path<(String, String)>,
 ) -> impl IntoResponse {
     match sport.as_str() {
-        "running" => get_performance::<Running>(Extension(tracker), Path(name)).await.into_response(),
-        "biathlon" => get_performance::<Biathlon>(Extension(tracker), Path(name)).await.into_response(),
-        "weight_lifting" => get_performance::<WeightLifting>(Extension(tracker), Path(name)).await.into_response(),
-        _ => (StatusCode::BAD_REQUEST, Json(json!({ "message": "Invalid sport type" }))).into_response(),
+        "running" => get_performance::<Running>(Extension(tracker), Path(name))
+            .await
+            .into_response(),
+        "biathlon" => get_performance::<Biathlon>(Extension(tracker), Path(name))
+            .await
+            .into_response(),
+        "weight_lifting" => get_performance::<WeightLifting>(Extension(tracker), Path(name))
+            .await
+            .into_response(),
+        _ => (
+            StatusCode::BAD_REQUEST,
+            Json(json!({ "message": "Invalid sport type" })),
+        )
+            .into_response(),
     }
 }
 
@@ -211,18 +217,42 @@ async fn add_performance_by_sport(
 ) -> impl IntoResponse {
     match sport.as_str() {
         "running" => match serde_json::from_value::<RunningPerformance>(body.0) {
-            Ok(performance) => add_performance::<Running, RunningPerformance>(Extension((tracker, pool)), Path(name), Json(performance)).await.into_response(),
+            Ok(performance) => add_performance::<Running, RunningPerformance>(
+                Extension((tracker, pool)),
+                Path(name),
+                Json(performance),
+            )
+            .await
+            .into_response(),
             Err(_) => Responses::InvalidPerformanceFormat("RunningPerformance").into_response(),
         },
         "biathlon" => match serde_json::from_value::<BiathlonPerformance>(body.0) {
-            Ok(performance) => add_performance::<Biathlon, BiathlonPerformance>(Extension((tracker, pool)), Path(name), Json(performance)).await.into_response(),
+            Ok(performance) => add_performance::<Biathlon, BiathlonPerformance>(
+                Extension((tracker, pool)),
+                Path(name),
+                Json(performance),
+            )
+            .await
+            .into_response(),
             Err(_) => Responses::InvalidPerformanceFormat("BiathlonPerformance").into_response(),
         },
         "weight_lifting" => match serde_json::from_value::<WeightLiftingPerformance>(body.0) {
-            Ok(performance) => add_performance::<WeightLifting, WeightLiftingPerformance>(Extension((tracker, pool)), Path(name), Json(performance)).await.into_response(),
-            Err(_) => Responses::InvalidPerformanceFormat("WeightLiftingPerformance").into_response(),
+            Ok(performance) => add_performance::<WeightLifting, WeightLiftingPerformance>(
+                Extension((tracker, pool)),
+                Path(name),
+                Json(performance),
+            )
+            .await
+            .into_response(),
+            Err(_) => {
+                Responses::InvalidPerformanceFormat("WeightLiftingPerformance").into_response()
+            }
         },
-        _ => (StatusCode::BAD_REQUEST, Json(json!({ "message": "Invalid sport type" }))).into_response(),
+        _ => (
+            StatusCode::BAD_REQUEST,
+            Json(json!({ "message": "Invalid sport type" })),
+        )
+            .into_response(),
     }
 }
 
@@ -245,13 +275,24 @@ async fn remove_performance_by_sport(
     Path((sport, name)): Path<(String, String)>,
 ) -> impl IntoResponse {
     match sport.as_str() {
-        "running" => remove_performance::<Running>(Extension((tracker, pool)), Path(name)).await.into_response(),
-        "biathlon" => remove_performance::<Biathlon>(Extension((tracker, pool)), Path(name)).await.into_response(),
-        "weight_lifting" => remove_performance::<WeightLifting>(Extension((tracker, pool)), Path(name)).await.into_response(),
-        _ => (StatusCode::BAD_REQUEST, Json(json!({ "message": "Invalid sport type" }))).into_response(),
+        "running" => remove_performance::<Running>(Extension((tracker, pool)), Path(name))
+            .await
+            .into_response(),
+        "biathlon" => remove_performance::<Biathlon>(Extension((tracker, pool)), Path(name))
+            .await
+            .into_response(),
+        "weight_lifting" => {
+            remove_performance::<WeightLifting>(Extension((tracker, pool)), Path(name))
+                .await
+                .into_response()
+        }
+        _ => (
+            StatusCode::BAD_REQUEST,
+            Json(json!({ "message": "Invalid sport type" })),
+        )
+            .into_response(),
     }
 }
-
 
 async fn get_performance<T: Metric + Clone>(
     Extension(tracker): Extension<Arc<PerformanceTracker>>,

@@ -1,8 +1,8 @@
+use axum::http::StatusCode;
 use axum::response::{IntoResponse, Json as AxumJson, Response};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fmt::{Display, Formatter};
-use axum::http::StatusCode;
-use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 #[derive(Serialize, Deserialize, ToSchema)]
@@ -36,9 +36,12 @@ impl IntoResponse for Error {
             Error::NameTooLong => StatusCode::BAD_REQUEST,
         };
 
-        (status, AxumJson(json!({
-            "message": self.to_string(),
-        })))
+        (
+            status,
+            AxumJson(json!({
+                "message": self.to_string(),
+            })),
+        )
             .into_response()
     }
 }
