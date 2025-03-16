@@ -3,17 +3,18 @@ use axum::response::{IntoResponse, Json as AxumJson, Response};
 use serde_json::json;
 use std::any::Any;
 use std::fmt::Debug;
+use utoipa::ToSchema;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, ToSchema)]
 pub struct Accuracy(pub f32);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, ToSchema)]
 pub struct Distance(pub f32);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, ToSchema)]
 pub struct Speed(pub f32);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, ToSchema)]
 pub struct Biathlon {
     /// Shooting accuracy
     pub accuracy: Accuracy,
