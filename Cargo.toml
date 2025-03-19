@@ -14,3 +14,4 @@ serde = { version = "1.0.218", features = ["derive"] }
 sqlx = {version = "0.8.3", features = ["postgres", "runtime-tokio-native-tls"]}
 utoipa = { version = "5.3.1", features = ["axum_extras"] }
 utoipa-swagger-ui = { version = "9.0.0", features = ["axum"] }
+thiserror = "2.0.12"
