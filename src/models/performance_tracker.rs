@@ -44,7 +44,7 @@ impl SportPerformance for PerformanceTracker {
         if let Some(metrics) = perf_guard.get(sportsman) {
             for metric in metrics.iter() {
                 if let Some(down_casted) = metric.as_any().downcast_ref::<T>() {
-                    return Ok(down_casted.clone());
+                    return Ok(down_casted.to_owned());
                 }
             }
             Err(Error::SportsmanDoesntHasMetric)
