@@ -269,12 +269,12 @@ async fn remove_performance<T: Metric>(
     match pool.remove_performance::<T>(&sportsman).await {
         Ok(removed) => {
             if !removed {
-                return Responses::PerformanceNotFound.into_response();
+                return Responses::Errors(Error::SportsmanDoesntHasMetric).into_response();
             }
         }
         Err(e) => {
             return match e {
-                sqlx::Error::RowNotFound => Responses::SportsmanNotFound.into_response(),
+                sqlx::Error::RowNotFound => Responses::Errors(Error::SportsmanNotFound).into_response(),
                 _ => {
                     log::error!("Error while removing performance: {e}");
                     Responses::Errors(Error::RemoveError).into_response()
