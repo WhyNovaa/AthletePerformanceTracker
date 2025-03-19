@@ -16,8 +16,8 @@ impl Sportsman {
     pub fn unchecked_new(name: String) -> Self {
         Self(name)
     }
-    pub fn name(&self) -> String {
-        self.0.clone()
+    pub fn name(&self) -> &String {
+        &self.0
     }
 }
 
