@@ -4,6 +4,8 @@ use dotenv::dotenv;
 mod models;
 mod service;
 mod traits;
+mod db;
+mod api;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -1,4 +1,4 @@
-use crate::models::error::Error;
+use crate::api::error::Error;
 use crate::models::performance_tracker::PerformanceTracker;
 use crate::models::sportsman::Sportsman;
 use axum::response::IntoResponse;

@@ -1,4 +1,4 @@
-use crate::models::error::Error;
+use crate::api::error::Error;
 use crate::models::sportsman::Sportsman;
 use crate::traits::traits::{Metric, SportPerformance};
 use std::any::TypeId;

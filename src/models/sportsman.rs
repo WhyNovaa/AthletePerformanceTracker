@@ -1,4 +1,4 @@
-use crate::models::error::Error;
+use crate::api::error::Error;
 use std::fmt;
 use std::fmt::Formatter;
 

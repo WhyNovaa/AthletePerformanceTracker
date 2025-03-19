@@ -1,4 +1,4 @@
-use crate::models::error::Error;
+use crate::api::error::Error;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Json as AxumJson, Response};
 use serde::{Deserialize, Serialize};
