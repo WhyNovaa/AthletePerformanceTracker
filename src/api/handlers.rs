@@ -1,23 +1,24 @@
-use std::sync::Arc;
-use std::time::Duration;
-use axum::http::StatusCode;
-use axum::{Extension, Json};
-use axum::extract::Path;
-use axum::response::IntoResponse;
-use serde_json::json;
-use tokio::net::TcpListener;
-use crate::db::postgres_pool::DBPool;
 use crate::api::error::Error;
+use crate::api::responses::Responses;
+use crate::db::postgres_pool::DBPool;
 use crate::models::metrics::biathlon::Biathlon;
 use crate::models::metrics::running::Running;
 use crate::models::metrics::weight_lifting::WeightLifting;
 use crate::models::performance_tracker::PerformanceTracker;
-use crate::api::responses::Responses;
-use crate::models::service_models::{BiathlonPerformance, RunningPerformance, WeightLiftingPerformance};
+use crate::models::service_models::{
+    BiathlonPerformance, RunningPerformance, WeightLiftingPerformance,
+};
 use crate::models::sportsman::Sportsman;
 use crate::service::core::Url;
 use crate::traits::traits::{Metric, Pool, SportPerformance};
-
+use axum::extract::Path;
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::{Extension, Json};
+use serde_json::json;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::net::TcpListener;
 
 pub async fn retry_to_bind(url: &Url) -> Result<TcpListener, ()> {
     for _ in 0..5 {
@@ -131,8 +132,8 @@ pub async fn add_performance_by_sport(
                 Path(name),
                 Json(performance),
             )
-                .await
-                .into_response(),
+            .await
+            .into_response(),
             Err(_) => Responses::InvalidPerformanceFormat("RunningPerformance").into_response(),
         },
         "biathlon" => match serde_json::from_value::<BiathlonPerformance>(body.0) {
@@ -141,8 +142,8 @@ pub async fn add_performance_by_sport(
                 Path(name),
                 Json(performance),
             )
-                .await
-                .into_response(),
+            .await
+            .into_response(),
             Err(_) => Responses::InvalidPerformanceFormat("BiathlonPerformance").into_response(),
         },
         "weight_lifting" => match serde_json::from_value::<WeightLiftingPerformance>(body.0) {
@@ -151,8 +152,8 @@ pub async fn add_performance_by_sport(
                 Path(name),
                 Json(performance),
             )
-                .await
-                .into_response(),
+            .await
+            .into_response(),
             Err(_) => {
                 Responses::InvalidPerformanceFormat("WeightLiftingPerformance").into_response()
             }

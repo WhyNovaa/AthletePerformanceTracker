@@ -1,11 +1,11 @@
 use crate::service::core::Service;
 use dotenv::dotenv;
 
+mod api;
+mod db;
 mod models;
 mod service;
 mod traits;
-mod db;
-mod api;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

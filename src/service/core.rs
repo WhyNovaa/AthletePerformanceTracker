@@ -1,17 +1,19 @@
 use crate::traits::traits::Pool;
 use std::env;
 
+use crate::api::api_doc::ApiDoc;
+use crate::api::handlers::retry_to_bind;
+use crate::db::postgres_pool::DBPool;
+use crate::models::performance_tracker::PerformanceTracker;
+use crate::service::routes::{
+    routes_add_performance, routes_get_performance, routes_remove_performance,
+};
 use axum::Router;
 use std::fmt::Display;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use crate::api::api_doc::ApiDoc;
-use crate::api::handlers::retry_to_bind;
-use crate::db::postgres_pool::DBPool;
-use crate::models::performance_tracker::PerformanceTracker;
-use crate::service::routes::{routes_add_performance, routes_get_performance, routes_remove_performance};
 
 pub struct Url(pub String);
 

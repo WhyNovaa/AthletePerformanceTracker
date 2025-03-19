@@ -1,6 +1,5 @@
 use utoipa::OpenApi;
 
-
 #[derive(OpenApi)]
 #[openapi(
     paths(
