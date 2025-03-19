@@ -19,7 +19,7 @@ pub struct Url(pub String);
 
 impl Display for Url {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.clone())
+        write!(f, "{}", self.0)
     }
 }
 

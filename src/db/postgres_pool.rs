@@ -194,7 +194,7 @@ impl DBPool {
                         .clone_box(),
                     )
                 })
-                .collect::<Vec<(Id, Box<dyn Metric + 'static>)>>()
+                .collect::<Vec<(Id, Box<dyn Metric>)>>()
         } else {
             return Err(sqlx::Error::TypeNotFound {
                 type_name: "Unknown metric".to_string(),
