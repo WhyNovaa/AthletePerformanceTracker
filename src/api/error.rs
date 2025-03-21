@@ -2,8 +2,8 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Json as AxumJson, Response};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use utoipa::ToSchema;
 use thiserror::Error;
+use utoipa::ToSchema;
 
 #[derive(Error, Debug, Serialize, Deserialize, ToSchema)]
 pub enum Error {
@@ -34,6 +34,7 @@ impl IntoResponse for Error {
             AxumJson(json!({
                 "message": self.to_string(),
             })),
-        ).into_response()
+        )
+            .into_response()
     }
 }
