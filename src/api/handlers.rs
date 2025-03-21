@@ -274,7 +274,9 @@ async fn remove_performance<T: Metric>(
         }
         Err(e) => {
             return match e {
-                sqlx::Error::RowNotFound => Responses::Errors(Error::SportsmanNotFound).into_response(),
+                sqlx::Error::RowNotFound => {
+                    Responses::Errors(Error::SportsmanNotFound).into_response()
+                }
                 _ => {
                     log::error!("Error while removing performance: {e}");
                     Responses::Errors(Error::RemoveError).into_response()

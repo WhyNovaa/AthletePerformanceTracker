@@ -3,7 +3,6 @@ use std::env;
 
 use crate::api::api_doc::ApiDoc;
 use crate::api::handlers::retry_to_bind;
-use crate::db::postgres_pool::DBPool;
 use crate::models::performance_tracker::PerformanceTracker;
 use crate::service::routes::{
     routes_add_performance, routes_get_performance, routes_remove_performance,
@@ -23,16 +22,16 @@ impl Display for Url {
     }
 }
 
-pub struct Service {
+pub struct Service<P: Pool> {
     router: Router,
     tcp_listener: TcpListener,
     tracker: Arc<PerformanceTracker>,
-    pool: Arc<DBPool>,
+    pool: Arc<P>,
 }
 
-impl Service {
-    pub async fn new() -> Self {
-        let pool = Arc::new(DBPool::new().await);
+impl<P: Pool> Service<P> {
+    pub async fn new(p: P) -> Self {
+        let pool = Arc::new(p);
 
         let tracker = Arc::new(
             pool.get_performance_tracker()

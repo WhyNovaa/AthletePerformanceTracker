@@ -17,7 +17,7 @@ pub trait SportPerformance {
     async fn remove_performance<T: Metric>(&self, sportsman: Sportsman) -> Result<(), Error>;
 }
 
-pub trait Pool {
+pub trait Pool: Send + Sync + 'static {
     async fn add_performance(
         &self,
         sportsman: &Sportsman,
