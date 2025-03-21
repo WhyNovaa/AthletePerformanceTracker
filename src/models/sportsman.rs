@@ -2,7 +2,7 @@ use crate::api::error::Error;
 use std::fmt;
 use std::fmt::Formatter;
 
-#[derive(Debug, Hash, Eq, PartialEq)]
+#[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct Sportsman(String);
 
 impl Sportsman {
