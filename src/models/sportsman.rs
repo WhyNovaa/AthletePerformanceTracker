@@ -1,8 +1,8 @@
-use crate::models::error::Error;
+use crate::api::error::Error;
 use std::fmt;
 use std::fmt::Formatter;
 
-#[derive(Debug, Hash, Eq, PartialEq)]
+#[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub struct Sportsman(String);
 
 impl Sportsman {
@@ -16,8 +16,8 @@ impl Sportsman {
     pub fn unchecked_new(name: String) -> Self {
         Self(name)
     }
-    pub fn name(&self) -> String {
-        self.0.clone()
+    pub fn name(&self) -> &String {
+        &self.0
     }
 }
 

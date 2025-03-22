@@ -3,8 +3,8 @@ use crate::models::metrics::running::Running;
 use crate::models::metrics::weight_lifting::WeightLifting;
 use crate::models::metrics::{biathlon, running, weight_lifting};
 use crate::models::performance_tracker::{Metrics, PerformanceTracker};
+use crate::models::service_models::Id;
 use crate::models::sportsman::Sportsman;
-use crate::service::models::Id;
 use crate::traits::traits::{Metric, Pool};
 use sqlx::{PgPool, Row};
 use std::any::TypeId;
@@ -194,7 +194,7 @@ impl DBPool {
                         .clone_box(),
                     )
                 })
-                .collect::<Vec<(Id, Box<dyn Metric + 'static>)>>()
+                .collect::<Vec<(Id, Box<dyn Metric>)>>()
         } else {
             return Err(sqlx::Error::TypeNotFound {
                 type_name: "Unknown metric".to_string(),
