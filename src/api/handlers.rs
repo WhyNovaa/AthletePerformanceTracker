@@ -70,13 +70,13 @@ pub async fn get_performance_by_sport(
     Path((sport, name)): Path<(String, String)>,
 ) -> impl IntoResponse {
     match sport.as_str() {
-        "running" => get_performance::<Running>(Extension(tracker), Path(name))
+        "running" => get_performance::<Running>(tracker, name)
             .await
             .into_response(),
-        "biathlon" => get_performance::<Biathlon>(Extension(tracker), Path(name))
+        "biathlon" => get_performance::<Biathlon>(tracker, name)
             .await
             .into_response(),
-        "weight_lifting" => get_performance::<WeightLifting>(Extension(tracker), Path(name))
+        "weight_lifting" => get_performance::<WeightLifting>(tracker, name)
             .await
             .into_response(),
         _ => (
@@ -121,16 +121,18 @@ pub async fn get_performance_by_sport(
 )]
 
 pub async fn add_performance_by_sport(
-    Extension((tracker, pool)): Extension<(Arc<PerformanceTracker>, Arc<DBPool>)>,
+    Extension(tracker): Extension<Arc<PerformanceTracker>>,
+    Extension(pool): Extension<Arc<DBPool>>,
     Path((sport, name)): Path<(String, String)>,
     body: Json<serde_json::Value>,
 ) -> impl IntoResponse {
     match sport.as_str() {
         "running" => match serde_json::from_value::<RunningPerformance>(body.0) {
             Ok(performance) => add_performance::<Running, RunningPerformance>(
-                Extension((tracker, pool)),
-                Path(name),
-                Json(performance),
+                tracker,
+                pool,
+                name,
+                performance,
             )
             .await
             .into_response(),
@@ -138,9 +140,10 @@ pub async fn add_performance_by_sport(
         },
         "biathlon" => match serde_json::from_value::<BiathlonPerformance>(body.0) {
             Ok(performance) => add_performance::<Biathlon, BiathlonPerformance>(
-                Extension((tracker, pool)),
-                Path(name),
-                Json(performance),
+                tracker,
+                pool,
+                name,
+                performance,
             )
             .await
             .into_response(),
@@ -148,9 +151,10 @@ pub async fn add_performance_by_sport(
         },
         "weight_lifting" => match serde_json::from_value::<WeightLiftingPerformance>(body.0) {
             Ok(performance) => add_performance::<WeightLifting, WeightLiftingPerformance>(
-                Extension((tracker, pool)),
-                Path(name),
-                Json(performance),
+                tracker,
+                pool,
+                name,
+                performance,
             )
             .await
             .into_response(),
@@ -181,18 +185,19 @@ pub async fn add_performance_by_sport(
     )
 )]
 pub async fn remove_performance_by_sport(
-    Extension((tracker, pool)): Extension<(Arc<PerformanceTracker>, Arc<DBPool>)>,
+    Extension(tracker): Extension<Arc<PerformanceTracker>>,
+    Extension(pool): Extension<Arc<DBPool>>,
     Path((sport, name)): Path<(String, String)>,
 ) -> impl IntoResponse {
     match sport.as_str() {
-        "running" => remove_performance::<Running>(Extension((tracker, pool)), Path(name))
+        "running" => remove_performance::<Running>(tracker, pool, name)
             .await
             .into_response(),
-        "biathlon" => remove_performance::<Biathlon>(Extension((tracker, pool)), Path(name))
+        "biathlon" => remove_performance::<Biathlon>(tracker, pool, name)
             .await
             .into_response(),
         "weight_lifting" => {
-            remove_performance::<WeightLifting>(Extension((tracker, pool)), Path(name))
+            remove_performance::<WeightLifting>(tracker, pool, name)
                 .await
                 .into_response()
         }
@@ -205,8 +210,8 @@ pub async fn remove_performance_by_sport(
 }
 
 async fn get_performance<T: Metric + Clone>(
-    Extension(tracker): Extension<Arc<PerformanceTracker>>,
-    Path(name): Path<String>,
+    tracker: Arc<PerformanceTracker>,
+    name: String,
 ) -> impl IntoResponse {
     let sportsman = match Sportsman::new(name) {
         Ok(s) => s,
@@ -226,9 +231,10 @@ async fn get_performance<T: Metric + Clone>(
 }
 
 async fn add_performance<T, P>(
-    Extension((tracker, pool)): Extension<(Arc<PerformanceTracker>, Arc<DBPool>)>,
-    Path(name): Path<String>,
-    Json(performance): Json<P>,
+    tracker: Arc<PerformanceTracker>,
+    pool: Arc<DBPool>,
+    name: String,
+    performance: P,
 ) -> impl IntoResponse
 where
     T: Metric,
@@ -258,8 +264,9 @@ where
 }
 
 async fn remove_performance<T: Metric>(
-    Extension((tracker, pool)): Extension<(Arc<PerformanceTracker>, Arc<DBPool>)>,
-    Path(name): Path<String>,
+    tracker: Arc<PerformanceTracker>,
+    pool: Arc<DBPool>,
+    name: String,
 ) -> impl IntoResponse {
     let sportsman = match Sportsman::new(name) {
         Ok(s) => s,

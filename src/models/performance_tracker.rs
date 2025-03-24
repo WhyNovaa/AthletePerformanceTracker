@@ -14,6 +14,11 @@ pub struct PerformanceTracker {
 }
 
 impl PerformanceTracker {
+    pub fn default() -> Self {
+        Self {
+            performances: Default::default(),
+        }
+    }
     pub fn new(sportsmen_to_metrics: HashMap<Sportsman, Metrics>) -> Self {
         Self {
             performances: RwLock::new(sportsmen_to_metrics),

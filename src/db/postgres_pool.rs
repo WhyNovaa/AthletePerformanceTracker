@@ -302,7 +302,7 @@ impl Pool for DBPool {
     }
 
     /// Removes metric if it exists
-    async fn remove_performance<T: Metric>(
+    async fn remove_performance<T: Metric> (
         &self,
         sportsman: &Sportsman,
     ) -> Result<bool, sqlx::Error> {

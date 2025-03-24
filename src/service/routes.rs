@@ -16,7 +16,8 @@ pub fn routes_get_performance(tracker: Arc<PerformanceTracker>) -> Router {
 pub fn routes_add_performance<P: Pool>(tracker: Arc<PerformanceTracker>, pool: Arc<P>) -> Router {
     Router::new()
         .route("/{sport}/{name}", post(add_performance_by_sport))
-        .layer(Extension((tracker, Arc::clone(&pool))))
+        .layer(Extension(tracker))
+        .layer(Extension(pool))
 }
 
 pub fn routes_remove_performance<P: Pool>(
@@ -25,5 +26,6 @@ pub fn routes_remove_performance<P: Pool>(
 ) -> Router {
     Router::new()
         .route("/{sport}/{name}", delete(remove_performance_by_sport))
-        .layer(Extension((tracker, Arc::clone(&pool))))
+        .layer(Extension(tracker))
+        .layer(Extension(pool))
 }
