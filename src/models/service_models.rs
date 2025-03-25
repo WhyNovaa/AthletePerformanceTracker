@@ -4,10 +4,13 @@ use crate::models::metrics::weight_lifting::{LiftedWeight, Weight, WeightLifting
 use crate::models::metrics::{biathlon, running};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use validator::Validate;
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 pub struct RunningPerformance {
+    #[validate(range(min = 0.0))]
     distance: f32,
+    #[validate(range(min = 0.0))]
     speed: f32,
 }
 
@@ -17,10 +20,13 @@ impl Into<Running> for RunningPerformance {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 pub struct BiathlonPerformance {
+    #[validate(range(min = 0.0))]
     accuracy: f32,
+    #[validate(range(min = 0.0))]
     distance: f32,
+    #[validate(range(min = 0.0))]
     speed: f32,
 }
 
@@ -34,9 +40,11 @@ impl Into<Biathlon> for BiathlonPerformance {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 pub struct WeightLiftingPerformance {
+    #[validate(range(min = 0.0))]
     weight: f32,
+    #[validate(range(min = 0.0))]
     lifted_weight: f32,
 }
 

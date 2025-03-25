@@ -3,9 +3,8 @@ use axum::response::{IntoResponse, Json as AxumJson, Response};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use thiserror::Error;
-use utoipa::ToSchema;
 
-#[derive(Error, Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Error, Debug, Serialize, Deserialize)]
 pub enum Error {
     #[error("Sportsman not found")]
     SportsmanNotFound,
@@ -15,8 +14,10 @@ pub enum Error {
     SaveError,
     #[error("Something went wrong")]
     RemoveError,
-    #[error("Sportsman name is too long")]
-    NameTooLong,
+    #[error("Wrong input data: {0}")]
+    ValidationError(#[from] validator::ValidationError),
+    #[error("Wrong input data")]
+    ValidationErrors(#[from] validator::ValidationErrors),
 }
 
 impl IntoResponse for Error {
@@ -26,7 +27,8 @@ impl IntoResponse for Error {
             Error::SportsmanDoesntHasMetric => StatusCode::NOT_FOUND,
             Error::SaveError => StatusCode::INTERNAL_SERVER_ERROR,
             Error::RemoveError => StatusCode::INTERNAL_SERVER_ERROR,
-            Error::NameTooLong => StatusCode::BAD_REQUEST,
+            Error::ValidationError(_) => StatusCode::BAD_REQUEST,
+            Error::ValidationErrors(_) => StatusCode::BAD_REQUEST,
         };
 
         (

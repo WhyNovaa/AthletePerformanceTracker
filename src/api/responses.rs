@@ -3,9 +3,8 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Json as AxumJson, Response};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use utoipa::ToSchema;
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Serialize, Deserialize)]
 pub enum Responses {
     PerformanceAdded(&'static str),
     PerformanceRemoved,

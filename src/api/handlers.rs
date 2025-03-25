@@ -19,6 +19,7 @@ use serde_json::json;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::net::TcpListener;
+use validator::Validate;
 
 pub async fn retry_to_bind(url: &Url) -> Result<TcpListener, ()> {
     for _ in 0..5 {
@@ -128,36 +129,44 @@ pub async fn add_performance_by_sport(
 ) -> impl IntoResponse {
     match sport.as_str() {
         "running" => match serde_json::from_value::<RunningPerformance>(body.0) {
-            Ok(performance) => add_performance::<Running, RunningPerformance>(
-                tracker,
-                pool,
-                name,
-                performance,
-            )
-            .await
-            .into_response(),
+            Ok(performance) => {
+                if let Err(e) = performance.validate() {
+                    return Responses::Errors(Error::ValidationErrors(e)).into_response();
+                }
+
+                add_performance::<Running, RunningPerformance>(tracker, pool, name, performance)
+                    .await
+                    .into_response()
+            }
             Err(_) => Responses::InvalidPerformanceFormat("RunningPerformance").into_response(),
         },
         "biathlon" => match serde_json::from_value::<BiathlonPerformance>(body.0) {
-            Ok(performance) => add_performance::<Biathlon, BiathlonPerformance>(
-                tracker,
-                pool,
-                name,
-                performance,
-            )
-            .await
-            .into_response(),
+            Ok(performance) => {
+                if let Err(e) = performance.validate() {
+                    return Responses::Errors(Error::ValidationErrors(e)).into_response();
+                }
+
+                add_performance::<Biathlon, BiathlonPerformance>(tracker, pool, name, performance)
+                    .await
+                    .into_response()
+            }
             Err(_) => Responses::InvalidPerformanceFormat("BiathlonPerformance").into_response(),
         },
         "weight_lifting" => match serde_json::from_value::<WeightLiftingPerformance>(body.0) {
-            Ok(performance) => add_performance::<WeightLifting, WeightLiftingPerformance>(
-                tracker,
-                pool,
-                name,
-                performance,
-            )
-            .await
-            .into_response(),
+            Ok(performance) => {
+                if let Err(e) = performance.validate() {
+                    return Responses::Errors(Error::ValidationErrors(e)).into_response();
+                }
+
+                add_performance::<WeightLifting, WeightLiftingPerformance>(
+                    tracker,
+                    pool,
+                    name,
+                    performance,
+                )
+                .await
+                .into_response()
+            }
             Err(_) => {
                 Responses::InvalidPerformanceFormat("WeightLiftingPerformance").into_response()
             }
@@ -196,11 +205,9 @@ pub async fn remove_performance_by_sport(
         "biathlon" => remove_performance::<Biathlon>(tracker, pool, name)
             .await
             .into_response(),
-        "weight_lifting" => {
-            remove_performance::<WeightLifting>(tracker, pool, name)
-                .await
-                .into_response()
-        }
+        "weight_lifting" => remove_performance::<WeightLifting>(tracker, pool, name)
+            .await
+            .into_response(),
         _ => (
             StatusCode::BAD_REQUEST,
             Json(json!({ "message": "Invalid sport type" })),
