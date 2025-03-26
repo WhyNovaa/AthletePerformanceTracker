@@ -1,6 +1,9 @@
+use crate::db::postgres_pool::DBPool;
 use crate::service::core::Service;
 use dotenv::dotenv;
 
+mod api;
+mod db;
 mod models;
 mod service;
 mod traits;
@@ -10,7 +13,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
     env_logger::init();
 
-    let _ = Service::new().await.start().await;
+    let _ = Service::new(DBPool::new().await).await.start().await;
 
     Ok(())
 }
